@@ -1,0 +1,19 @@
+{
+  "name": "team_kobayashi",
+  "version": "1.0.0",
+  "description": "ハッカソン",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RyunosukeShigematsu/team_Kobayashi.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RyunosukeShigematsu/team_Kobayashi/issues"
+  },
+  "homepage": "https://github.com/RyunosukeShigematsu/team_Kobayashi#readme"
+}
