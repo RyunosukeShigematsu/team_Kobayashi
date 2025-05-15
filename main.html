@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>四コマヒストリー</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+    }
+    .selector {
+      margin: 20px auto;
+      text-align: center;
+    }
+    select, button {
+      font-size: 1rem;
+      padding: 5px 10px;
+      margin-top: 10px;
+    }
+    #namesContainer {
+      margin-top: 20px;
+      text-align: left;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #startButton {
+      display: none;
+    }
+    #output {
+      margin-top: 30px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #comicFrames {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 40px;
+      margin-bottom: 30px; /* 下の画像との間にスペース */
+    }
+    #readingImages {
+      margin-bottom: 40px; /* 下の画像群の下にも余裕 */
+    }
+
+    #confirmButton {
+      font-size: 1.2rem;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin: 0 auto;
+      display: none;
+    }
+    .frame {
+      width: 300px;
+      height: 300px;
+      border: 2px solid #333;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>四コマヒストリー</h1>
+
+  <div class="selector">
+    <label for="name">名字を選んでください：</label>
+    <select id="name" onchange="showNames()">
+      <option value="">-- 選択してください --</option>
+      <option value="tokugawa">徳川</option>
+      <option value="ashikaga">足利</option>
+      <option value="fujiwara">藤原</option>
+      <option value="hojo">北条</option>
+    </select>
+  </div>
+
+  <div id="namesContainer" class="selector"></div>
+
+  <div class="selector">
+    <button id="startButton" onclick="showSelected()">この内容でスタート！</button>
+  </div>
+
+  <div id="output" class="selector"></div>
+
+  <div id="comicFrames" class="selector"></div>
+
+  <div class="selector">
+    <button id="confirmButton" onclick="confirmSelection()">これで決定！</button>
+  </div>  
+
+  <div id="readingImages" class="selector"></div>
+
+  <script>
+    const nameData = {
+  tokugawa: [
+    {
+      name: "徳川家康",
+      short: "家康",
+      reading: "いえやす",
+      image: "images/ieyasu.png",
+      readingImages: [
+        { char: "い", image: "images/徳川家画像/1ieyasu/ieyasu1.png" },
+        { char: "え", image: "images/徳川家画像/1ieyasu/ieyasu2.png" },
+        { char: "や", image: "images/徳川家画像/1ieyasu/ieyasu3.png" },
+        { char: "す", image: "images/徳川家画像/1ieyasu/ieyasu4.png" }
+      ]
+    },
+    {
+      name: "徳川秀忠",
+      short: "秀忠",
+      reading: "ひでただ",
+      image: "images/hidetada.png",
+      readingImages: [
+        { char: "ひ", image: "images/徳川家画像/2hidetada/hidetada1.png" },
+        { char: "で", image: "images/徳川家画像/2hidetada/hidetada2.png" },
+        { char: "た", image: "images/徳川家画像/2hidetada/hidetada3.png" },
+        { char: "だ", image: "images/徳川家画像/2hidetada/hidetada4.png" }
+      ]
+    },
+    {
+      name: "徳川家光",
+      short: "家光",
+      reading: "いえみつ",
+      image: "images/iemitsu.png",
+      readingImages: [
+        { char: "い", image: "images/徳川家画像/3iemitsu/iemitsu1.png" },
+        { char: "え", image: "images/徳川家画像/3iemitsu/iemitsu2.png" },
+        { char: "み", image: "images/徳川家画像/3iemitsu/iemitsu3.png" },
+        { char: "つ", image: "images/徳川家画像/3iemitsu/iemitsu4.png" }
+      ]
+    },
+    {
+      name: "徳川家綱",
+      short: "家綱",
+      reading: "いえつな",
+      image: "images/ietsuna.png",
+      readingImages: [
+        { char: "い", image: "images/徳川家画像/4ietsuna/ietsuna1.png" },
+        { char: "え", image: "images/徳川家画像/4ietsuna/ietsuna2.png" },
+        { char: "つ", image: "images/徳川家画像/4ietsuna/ietsuna3.png" },
+        { char: "な", image: "images/徳川家画像/4ietsuna/ietsuna4.png" }
+      ]
+    },
+    {
+      name: "徳川綱吉",
+      short: "綱吉",
+      reading: "つなよし",
+      image: "images/tsunayoshi.png",
+      readingImages: [
+        { char: "つ", image: "images/徳川家画像/5tsunayoshi/tsunayoshi1.png" },
+        { char: "な", image: "images/徳川家画像/5tsunayoshi/tsunayoshi2.png" },
+        { char: "よ", image: "images/徳川家画像/5tsunayoshi/tsunayoshi3.png" },
+        { char: "し", image: "images/徳川家画像/5tsunayoshi/tsunayoshi4.png" }
+      ]
+    }
+  ]
+};
+
+  
+    function showNames() {
+      const name = document.getElementById("name").value;
+      const container = document.getElementById("namesContainer");
+      const startButton = document.getElementById("startButton");
+      const comicFrames = document.getElementById("comicFrames");
+      const output = document.getElementById("output");
+  
+      container.innerHTML = "";
+      startButton.style.display = "none";
+      comicFrames.innerHTML = "";
+      output.innerText = "";
+  
+      if (nameData[name]) {
+        nameData[name].forEach(entry => {
+          const label = document.createElement("label");
+          label.style.display = "block";
+  
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = entry.name;
+          checkbox.name = "names";
+          checkbox.onchange = checkSelection;
+  
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(" " + entry.name));
+          container.appendChild(label);
+        });
+      }
+    }
+  
+    function checkSelection() {
+      const checked = document.querySelectorAll('input[name="names"]:checked').length;
+      const startButton = document.getElementById("startButton");
+      startButton.style.display = checked > 0 ? "inline-block" : "none";
+    }
+  
+   // ドラッグ開始時の処理
+function dragStart(event) {
+  event.dataTransfer.setData("text/plain", event.target.src);
+}
+
+// ドロップ時の処理を少し変更
+function dropHandler(event) {
+  event.preventDefault();
+  const imgSrc = event.dataTransfer.getData("text/plain");
+
+  if (event.target.classList.contains("frame")) {
+    event.target.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = imgSrc;
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.alt = "貼り付け画像";
+
+    event.target.appendChild(img);
+
+    // 4コマすべてに画像が貼られているかチェック
+    checkAllFramesFilled();
+  }
+}
+
+// 4コマ全部に画像があるかチェックし、あればボタン表示
+function checkAllFramesFilled() {
+  const frames = document.querySelectorAll("#comicFrames .frame");
+  const allFilled = Array.from(frames).every(frame => frame.querySelector("img") !== null);
+
+  const confirmButton = document.getElementById("confirmButton");
+  if (allFilled) {
+    confirmButton.style.display = "inline-block";
+  } 
+  else {
+    confirmButton.style.display = "none";
+  }
+}
+
+function confirmSelection() {
+  const frames = document.querySelectorAll("#comicFrames .frame");
+
+  frames.forEach(frame => {
+    // 既に表示されている文字要素があれば削除
+    const existingCharElem = frame.querySelector(".char-overlay");
+    if (existingCharElem) {
+      existingCharElem.remove();
+    }
+
+    const img = frame.querySelector("img");
+    if (!img) return; // 画像がなければスキップ
+
+    const imgSrc = img.src;
+
+    // 画像のsrcから対応するひらがなを探す
+    let foundChar = null;
+
+    outerLoop:
+    for (const family in nameData) {
+      for (const person of nameData[family]) {
+        for (const readingImg of person.readingImages) {
+          // 画像パスの最後の部分だけで比較して判定（簡単化）
+          if (imgSrc.endsWith(readingImg.image.split('/').pop())) {
+            foundChar = readingImg.char;
+            break outerLoop;
+          }
+        }
+      }
+    }
+
+    if (foundChar) {
+      // ひらがな文字を大きく表示する要素を作成
+     // ひらがな文字を大きく表示する要素を作成
+const charElem = document.createElement("div");
+charElem.className = "char-overlay";
+charElem.textContent = foundChar;
+// スタイルをインラインで指定（画像中央に大きく表示）
+Object.assign(charElem.style, {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)", // 完全に中央に配置
+  fontSize: "200px",                // さらに大きく
+  fontWeight: "bold",
+  color: "#e33",
+  pointerEvents: "none",
+  userSelect: "none",
+  fontFamily: "'Arial Black', Arial, sans-serif",
+  textShadow: "2px 2px 4px black",
+});
+
+
+      // frameの親はposition:relativeにする必要があるので設定
+      frame.style.position = "relative";
+
+      frame.appendChild(charElem);
+    }
+  });
+}
+
+
+
+// ドラッグオーバー時にドロップを許可
+function dragOverHandler(event) {
+  event.preventDefault();
+}
+
+// showSelected関数内で読み仮名画像にドラッグ開始イベントを付与
+function showSelected() {
+  const name = document.getElementById("name").value;
+  const checkboxes = document.querySelectorAll('input[name="names"]:checked');
+  const selectedValues = Array.from(checkboxes).map(cb => cb.value);
+  const output = document.getElementById("output");
+  const comicFrames = document.getElementById("comicFrames");
+  const readingImages = document.getElementById("readingImages");
+
+  // 表示文字列などはそのまま
+  const displayNames = nameData[name]
+    .filter(entry => selectedValues.includes(entry.name))
+    .map(entry => `${entry.short}（${entry.reading}）`);
+
+  const nameLabel = {
+    tokugawa: "徳川",
+    ashikaga: "足利",
+    fujiwara: "藤原",
+    hojo: "北条"
+  }[name];
+
+  output.innerText = `「${nameLabel}」の：${displayNames.join("、")}`;
+
+  // 4コマ表示
+  comicFrames.innerHTML = "";
+  for (let i = 1; i <= 4; i++) {
+    const frame = document.createElement("div");
+    frame.className = "frame";
+    frame.innerText = `コマ ${i}`;
+
+    // ドラッグ＆ドロップ用イベント設定
+    frame.addEventListener("dragover", dragOverHandler);
+    frame.addEventListener("drop", dropHandler);
+
+    comicFrames.appendChild(frame);
+  }
+
+// 読み仮名画像表示（ランダム配置対応版）
+readingImages.innerHTML = "";
+
+let allReadingImages = [];
+nameData[name]
+  .filter(entry => selectedValues.includes(entry.name))
+  .forEach(entry => {
+    entry.readingImages.forEach(imgObj => {
+      allReadingImages.push({
+        src: imgObj.image,
+        alt: `${entry.short} - ${imgObj.char}`,
+        char: imgObj.char
+      });
+    });
+  });
+
+// 配列をシャッフルする関数（Fisher-Yatesアルゴリズム）
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+shuffle(allReadingImages);
+
+allReadingImages.forEach(imgObj => {
+  const img = document.createElement("img");
+  img.src = imgObj.src;
+  img.alt = imgObj.alt;
+  img.style.width = "150px";
+  img.style.height = "150px";
+  img.style.margin = "10px";
+  img.draggable = true; // ドラッグ可能にする
+  img.addEventListener("dragstart", dragStart);
+  readingImages.appendChild(img);
+});
+
+}
+
+
+  </script>
+  
+
+</body>
+</html>
